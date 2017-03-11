@@ -23,6 +23,9 @@ namespace Prime31.ZestKit
 		protected bool _isCurrentlyManagedByZestKit;
 
 
+        IEnumerator ienumeratorTick;
+        MonoBehaviour ticker;
+
 		#region ITweenable
 
 		public abstract bool tick();
@@ -52,6 +55,32 @@ namespace Prime31.ZestKit
 			_isPaused = false;
 		}
 
+        public virtual void start(MonoBehaviour ticker)
+        {
+            // dont add ourself twice!
+            if( _isCurrentlyManagedByZestKit )
+            {
+                _isPaused = false;
+                return;
+            }
+
+            ienumeratorTick = TickByMonobehaviour();
+            this.ticker = ticker;
+            ticker.StartCoroutine(ienumeratorTick);
+
+            _isCurrentlyManagedByZestKit = true;
+            _isPaused = false; 
+        }
+
+        IEnumerator TickByMonobehaviour()
+        {
+            while (true)
+            {
+                tick();
+                yield return null;
+            }
+        }
+
 
 		public void pause()
 		{
@@ -67,11 +96,25 @@ namespace Prime31.ZestKit
 
 		public virtual void stop( bool bringToCompletion = false, bool bringToCompletionImmediately = false )
 		{
-			ZestKit.instance.removeTween( this );
+            if (StopTicker() == false)
+            {
+                ZestKit.instance.removeTween(this);
+            }
 			_isCurrentlyManagedByZestKit = false;
 			_isPaused = true;
 		}
 
+        bool StopTicker()
+        {
+            if (ticker != null)
+            {
+                ticker.StopCoroutine(ienumeratorTick);
+                ticker = null;
+                ienumeratorTick = null;
+                return true;
+            }
+            return false;
+        }
 		#endregion
 
 	}

@@ -181,6 +181,8 @@ namespace Prime31.ZestKit
 		/// </summary>
 		void start();
 
+        void start(MonoBehaviour monoBehaviour);
+
 		/// <summary>
 		/// pauses the tween
 		/// </summary>

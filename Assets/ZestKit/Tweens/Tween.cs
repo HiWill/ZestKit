@@ -48,9 +48,10 @@ namespace Prime31.ZestKit
 		protected LoopType _loopType;
 		protected int _loops;
 		protected float _delayBetweenLoops;
-		bool _isRunningInReverse;
+		bool _isRunningInReverse; 
 
-
+        IEnumerator ienumeratorTick;
+        MonoBehaviour ticker; 
 
 		#region ITweenT implementation
 
@@ -222,6 +223,12 @@ namespace Prime31.ZestKit
 					_nextTween = null;
 				}
 
+                if (ticker != null)
+                {
+                    StopTicker();
+                    _target = null;
+                }
+
 				return true;
 			}
 
@@ -257,6 +264,29 @@ namespace Prime31.ZestKit
 			}
 		}
 
+        public virtual void start(MonoBehaviour ticker)
+        {
+            if( !_isFromValueOverridden )
+                _fromValue = _target.getTweenedValue();
+
+            if( _tweenState == TweenState.Complete )
+            {               
+                _tweenState = TweenState.Running;
+                ienumeratorTick = TickByMonobehaviour();
+                this.ticker = ticker;
+                ticker.StartCoroutine(ienumeratorTick);
+                //ZestKit.instance.addTween( this );
+            }
+        }
+
+        IEnumerator TickByMonobehaviour()
+        {
+            while (true)
+            {
+                tick();
+                yield return null;
+            }
+        }
 
 		public void pause()
 		{
@@ -285,15 +315,32 @@ namespace Prime31.ZestKit
 				if( bringToCompletionImmediately )
 				{
 					tick();
-					ZestKit.instance.removeTween( this );
+                    if (StopTicker() == false)
+                    {
+                        ZestKit.instance.removeTween(this);
+                    }
 				}
 			}
 			else
 			{
-				ZestKit.instance.removeTween( this );
+                if (StopTicker() == false)
+                {
+                    ZestKit.instance.removeTween(this);
+                }
 			}
 		}
-			
+		
+        bool StopTicker()
+        {
+            if (ticker != null)
+            {
+                ticker.StopCoroutine(ienumeratorTick);
+                ticker = null;
+                ienumeratorTick = null;
+                return true;
+            }
+            return false;
+        }
 		#endregion
 
 
